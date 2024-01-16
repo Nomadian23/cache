@@ -1,0 +1,40 @@
+<?php
+/*
+Plugin Name: Clear Cache Button
+Description: Adds a button in the WordPress admin toolbar to clear the cache.
+Version: 1.0
+Author: Your Name
+*/
+
+// Add the clear cache button to the admin toolbar
+function add_clear_cache_button() {
+    if (current_user_can('manage_options')) {
+        global $wp_admin_bar;
+        $wp_admin_bar->add_menu(array(
+            'id' => 'clear-cache-button',
+            'title' => 'Clear Cache',
+            'href' => wp_nonce_url(admin_url('admin-post.php?action=clear_cache'), 'clear_cache_nonce'),
+            'meta' => array('class' => 'clear-cache-button', 'title' => 'Clear the website cache'),
+        ));
+    }
+}
+add_action('admin_bar_menu', 'add_clear_cache_button', 999);
+
+// Handle the cache clearing logic
+function clear_cache_action() {
+    // Check nonce
+    if (!isset($_GET['_wpnonce']) || !wp_verify_nonce($_GET['_wpnonce'], 'clear_cache_nonce')) {
+        wp_die('Security check failed!');
+    }
+
+    // Add your cache clearing logic here
+    // Example for W3 Total Cache
+    if (class_exists('W3TC\Dispatcher')) {
+        W3TC\Dispatcher::perform('flush_all');
+    }
+
+    // Redirect back to the admin page
+    wp_safe_redirect(admin_url());
+    exit;
+}
+add_action('admin_post_clear_cache', 'clear_cache_action');
